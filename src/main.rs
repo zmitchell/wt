@@ -8,6 +8,7 @@ use crate::commands::Cli;
 
 mod commands;
 mod git;
+mod util;
 
 type Error = anyhow::Error;
 

@@ -1,85 +1,20 @@
-use std::{
-    path::{Path, PathBuf},
-    process::Command,
-    str::FromStr,
-};
+use std::{borrow::Cow, path::Path, process::Command};
 
-use anyhow::{bail, Context};
+use anyhow::{anyhow, bail, Context};
+use gix::Repository;
+use tracing::debug;
 use tracing::instrument;
-use tracing::{debug, field::Empty};
 
-use crate::Error;
+use crate::{util::traceable_path, Error};
 const DEFAULT_BRANCH: &str = "main";
 
-/// Returns the configured default branch name if it exists
-pub fn default_branch_name() -> Result<String, anyhow::Error> {
-    let output = Command::new("git")
-        .args(["config", "init.defaultBranch"])
-        .output()
-        .context("failed to read default branch")?;
-    let value = String::from_utf8_lossy(output.stdout.as_ref());
-    let value = value.trim();
-    let branch = if value.is_empty() {
-        DEFAULT_BRANCH.to_string()
-    } else {
-        value.to_string()
-    };
-    tracing::debug!(default_branch = branch.as_str(), "found default branch");
-    Ok(branch)
-}
-
-/// Creates a new repository in an existing directory
-#[instrument(skip_all, fields(path = Empty))]
-pub fn init_repo(path: impl AsRef<Path>) -> Result<(), Error> {
-    let path = path.as_ref();
-    tracing::Span::current().record("path", path.to_string_lossy().as_ref());
-    if !path.exists() {
-        bail!("directory doesn't exist")
-    }
-    let output = Command::new("git")
-        .arg("init")
-        .arg(path)
-        .output()
-        .context("couldn't init git repository")?;
-    if !output.status.success() {
-        bail!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-    Ok(())
-}
-
-/// Gets the current commit count across all branches.
-/// This is useful for detecting whether the repository is brand new.
-pub fn get_commit_count() -> Result<usize, Error> {
-    let output = Command::new("git")
-        .args(["rev-list", "--count", "--all"])
-        .output()
-        .context("couldn't get commit count")?;
-    if !output.status.success() {
-        bail!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-    let count = String::from_utf8_lossy(&output.stdout)
-        .trim()
-        .parse()
-        .context("couldn't parse commit count")?;
-    Ok(count)
-}
-
-/// Gets the path to the repository root
-#[instrument]
-pub fn get_repo_root() -> Result<PathBuf, Error> {
-    let output = Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .output()
-        .context("couldn't get repository root")?;
-    if !output.status.success() {
-        bail!("{}", String::from_utf8_lossy(&output.stderr).trim());
-    }
-    let path = PathBuf::from_str(String::from_utf8_lossy(&output.stdout).trim())?;
-    debug!(
-        path = path.to_string_lossy().as_ref(),
-        "found repository root"
-    );
-    Ok(path)
+/// Returns the global default branch name
+pub fn global_default_branch_name() -> Result<String, Error> {
+    let config = gix::config::File::from_globals().context("couldn't read git config")?;
+    Ok(config
+        .string_by_key("init.defaultBranch")
+        .unwrap_or(Cow::Borrowed(DEFAULT_BRANCH.into()))
+        .to_string())
 }
 
 /// Creates the initial commit in a repository
@@ -92,16 +27,6 @@ pub fn create_initial_commit() -> Result<(), Error> {
         .output()?;
     if !output.status.success() {
         bail!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-    Ok(())
-}
-
-/// Creates the initial commit in a repository if necessary
-#[instrument]
-pub fn ensure_initial_commit() -> Result<(), Error> {
-    if get_commit_count()? == 0 {
-        debug!("need to create initial commit");
-        create_initial_commit()?;
     }
     Ok(())
 }
@@ -121,25 +46,24 @@ pub fn create_branch(name: impl AsRef<str>) -> Result<(), Error> {
 
 /// Gets the main branch of the repository (likely `main` or `master`)
 #[instrument]
-pub fn get_repo_main_branch() -> Result<String, Error> {
-    let current_dir = std::env::current_dir()?;
-    if get_commit_count()? == 0 {
-        return Ok(current_dir
-            .file_name()
-            .context("current directory had no name")?
-            .to_string_lossy()
-            .to_string());
-    }
-    std::env::set_current_dir(get_repo_root()?)?;
-    let output = Command::new("git")
-        .args(["rev-parse", "--abbrev-ref", "HEAD"])
-        .output()?;
-    if !output.status.success() {
-        bail!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-    // Restore the original working directory
-    std::env::set_current_dir(current_dir)?;
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+pub fn get_worktree_branch(repo: &Repository) -> Result<String, Error> {
+    repo.head_name()
+        .context("couldn't get current branch")?
+        .ok_or(anyhow!("couldn't get current branch"))
+        .map(|b| b.to_string())
+}
+
+/// Returns the main worktree
+#[instrument(skip_all, fields(starting_path = traceable_path(&starting_path)))]
+pub fn get_main_worktree(starting_path: impl AsRef<Path>) -> Result<Repository, Error> {
+    let starting_path = starting_path.as_ref();
+    let repo = gix::discover(starting_path).context("couldn't determine current repository")?;
+    let main_repo = repo.main_repo().context("couldn't find main worktree")?;
+    debug!(
+        path = traceable_path(main_repo.path()),
+        "found main worktree"
+    );
+    Ok(main_repo)
 }
 
 /// Creates a new worktree at the specified path, optionally creating a new branch for the worktree
@@ -153,4 +77,10 @@ pub fn new_worktree(dir: impl AsRef<Path>, branch: impl AsRef<str>) -> Result<()
         bail!("{}", String::from_utf8_lossy(&output.stderr));
     }
     Ok(())
+}
+
+/// Returns the path of the repo's worktree
+pub fn worktree_path(repo: &Repository) -> Result<&Path, Error> {
+    repo.work_dir()
+        .context("main worktree was a bare repository")
 }
