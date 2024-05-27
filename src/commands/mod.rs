@@ -5,11 +5,16 @@ use crate::Error;
 
 mod init;
 mod new;
+mod rm;
 
 pub use init::init;
 pub use new::new;
 
-use self::{init::Init, new::New};
+use self::{
+    init::Init,
+    new::New,
+    rm::{remove, Remove},
+};
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -37,6 +42,9 @@ pub enum Commands {
     #[command(about = "Create a new worktree")]
     #[command(long_about = include_str!("../long_help/new.md"))]
     New(New),
+    #[command(about = "Remove one or more worktrees")]
+    #[command(alias = "rm")]
+    Remove(Remove),
 }
 
 #[instrument(skip(cmd))]
@@ -54,6 +62,10 @@ pub fn run(cmd: &Commands, opts: &GlobalOptions) -> Result<(), Error> {
             if !opts.quiet {
                 println!("{}", path.display());
             }
+            Ok(())
+        }
+        Commands::Remove(args) => {
+            remove(args)?;
             Ok(())
         }
     }

@@ -24,7 +24,7 @@ pub struct New {
     #[arg(help = "Create a new branch with a name different from the directory name")]
     pub new_branch: Option<String>,
 
-    #[arg(short, long, value_name = "PATH, ...")]
+    #[arg(short, long, value_name = "PATH")]
     #[arg(help = "Additional files to symlink into the new worktree")]
     #[arg(value_parser = file_exists)]
     pub symlinks: Vec<PathBuf>,

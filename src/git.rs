@@ -1,6 +1,8 @@
+use std::path::PathBuf;
 use std::{borrow::Cow, path::Path, process::Command};
 
 use anyhow::{anyhow, bail, Context};
+use gix::refs::{FullName, PartialName, PartialNameRef};
 use gix::Repository;
 use tracing::debug;
 use tracing::instrument;
@@ -44,13 +46,12 @@ pub fn create_branch(name: impl AsRef<str>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Gets the main branch of the repository (likely `main` or `master`)
+/// Gets the currently checked out branch of the worktree
 #[instrument]
-pub fn get_worktree_branch(repo: &Repository) -> Result<String, Error> {
+pub fn get_worktree_branch(repo: &Repository) -> Result<FullName, Error> {
     repo.head_name()
-        .context("couldn't get current branch")?
-        .ok_or(anyhow!("couldn't get current branch"))
-        .map(|b| b.to_string())
+        .context("couldn't get current branch ref")?
+        .ok_or(anyhow!("worktree had no HEAD"))
 }
 
 /// Returns the main worktree
@@ -72,7 +73,22 @@ pub fn new_worktree(dir: impl AsRef<Path>, branch: impl AsRef<str>) -> Result<()
     let dir = dir.as_ref();
     let mut cmd = Command::new("git");
     cmd.args(["worktree", "add"]).arg(dir).arg(branch.as_ref());
-    let output = cmd.output()?;
+    let output = cmd.output().context("call to git-worktree failed")?;
+    if !output.status.success() {
+        bail!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+    Ok(())
+}
+
+/// Removes a worktree from the repository
+pub fn remove_worktree(dir: impl AsRef<Path>) -> Result<(), Error> {
+    let output = Command::new("git")
+        .args(["worktree", "remove"])
+        .arg(dir.as_ref())
+        // .stdout(std::process::Stdio::piped())
+        // .stderr(std::process::Stdio::piped())
+        .output()
+        .context("call to git-worktree failed")?;
     if !output.status.success() {
         bail!("{}", String::from_utf8_lossy(&output.stderr));
     }
@@ -83,4 +99,32 @@ pub fn new_worktree(dir: impl AsRef<Path>, branch: impl AsRef<str>) -> Result<()
 pub fn worktree_path(repo: &Repository) -> Result<&Path, Error> {
     repo.work_dir()
         .context("main worktree was a bare repository")
+}
+
+/// Returns the path for a sibling worktree
+pub fn sibling_worktree_path(
+    starting_wt: &Repository,
+    name: impl AsRef<str>,
+) -> Result<PathBuf, Error> {
+    let starting_wt_path = worktree_path(starting_wt).context("couldn't get worktree path")?;
+    let new_path = starting_wt_path
+        .parent()
+        .ok_or(anyhow!("worktree had no parent"))?
+        .join(name.as_ref());
+    debug!(
+        path = traceable_path(&new_path),
+        "determined sibling worktree location"
+    );
+    Ok(new_path)
+}
+
+/// Deletes the branch from the repository
+pub fn delete_branch(repo: &Repository, branch_ref: &FullName) -> Result<(), Error> {
+    let printable_ref_name = branch_ref.as_bstr();
+    let git_ref = repo
+        .find_reference(branch_ref.as_ref())
+        .with_context(|| format!("couldn't find reference '{printable_ref_name}'"))?;
+    git_ref
+        .delete()
+        .with_context(|| format!("couldn't delete git reference '{printable_ref_name}'"))
 }
