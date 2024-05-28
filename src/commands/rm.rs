@@ -1,11 +1,11 @@
 use anyhow::{bail, Context};
 use clap::Args;
-use gix::refs::{FullName, FullNameRef};
+use tracing::instrument;
 
 use crate::{
     git::{
-        delete_branch, get_main_worktree, get_worktree_branch, remove_worktree,
-        sibling_worktree_path,
+        delete_branch, get_main_worktree, get_worktree_branch, get_worktrees,
+        global_default_branch_name, remove_worktree, sibling_worktree_path,
     },
     Error,
 };
@@ -25,14 +25,28 @@ pub struct Remove {
 }
 
 /// Remove one or more worktrees
+#[instrument]
 pub fn remove(args: &Remove) -> Result<(), Error> {
-    if args.names.is_empty() {
-        bail!("no worktrees specified");
-    }
     let main_wt =
         get_main_worktree(std::env::current_dir().context("couldn't get current directory")?)
             .context("couldn't get main worktree")?;
-    for name in &args.names {
+    let to_delete = if args.names.is_empty() {
+        let default_branch = global_default_branch_name().context("couldn't get default branch")?;
+        let worktrees = get_worktrees(&main_wt)
+            .context("couldn't get list of worktrees")?
+            .into_iter()
+            .filter(|name| name != &default_branch)
+            .collect::<Vec<_>>();
+        if worktrees.is_empty() {
+            bail!("no other worktrees to remove");
+        }
+        inquire::MultiSelect::new("Select worktrees to remove", worktrees)
+            .prompt()
+            .context("failed to get selected worktrees")?
+    } else {
+        args.names.clone()
+    };
+    for name in &to_delete {
         let path = sibling_worktree_path(&main_wt, name)
             .with_context(|| format!("couldn't get path for worktree '{name}'"))?;
         let repo = gix::open(&path).with_context(|| format!("couldn't open worktree '{name}'"))?;

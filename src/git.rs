@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::{borrow::Cow, path::Path, process::Command};
 
 use anyhow::{anyhow, bail, Context};
-use gix::refs::{FullName, PartialName, PartialNameRef};
+use gix::refs::FullName;
 use gix::Repository;
 use tracing::debug;
 use tracing::instrument;
@@ -33,7 +33,9 @@ pub fn create_initial_commit() -> Result<(), Error> {
     Ok(())
 }
 
-/// Creates a new branch in the repository
+/// Creates a new branch in the repository.
+///
+/// Assumes you're in the project already.
 #[instrument(skip_all, fields(name = name.as_ref()))]
 pub fn create_branch(name: impl AsRef<str>) -> Result<(), Error> {
     let output = Command::new("git")
@@ -127,4 +129,50 @@ pub fn delete_branch(repo: &Repository, branch_ref: &FullName) -> Result<(), Err
     git_ref
         .delete()
         .with_context(|| format!("couldn't delete git reference '{printable_ref_name}'"))
+}
+
+/// Returns a list of the worktrees other than the main worktree
+pub fn get_worktrees(repo: &Repository) -> Result<Vec<String>, Error> {
+    let worktrees = repo
+        .worktrees()
+        .context("couldn't get worktrees for repository")?;
+    Ok(worktrees
+        .into_iter()
+        .map(|wt| wt.id().to_string())
+        .collect::<Vec<_>>())
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+    use crate::commands::init::{init, Init};
+
+    #[test]
+    fn reads_worktrees() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let init_opts = Init {
+            name: "test_proj".to_string(),
+            path: Some(temp_dir.path().to_path_buf()),
+        };
+        init(&init_opts).unwrap();
+        let default_branch = global_default_branch_name().unwrap();
+        let repo = gix::open(temp_dir.path().join("test_proj").join(&default_branch)).unwrap();
+
+        // Create the worktree branch before creating the worktree
+        let current_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(temp_dir.path().join("test_proj").join(default_branch)).unwrap();
+        create_branch("new_worktree_branch").unwrap();
+        std::env::set_current_dir(current_dir).unwrap();
+
+        // Create the new worktree
+        new_worktree(
+            temp_dir.path().join("test_proj").join("new_worktree"),
+            "new_worktree_branch",
+        )
+        .unwrap();
+        let worktrees = get_worktrees(&repo).unwrap();
+        assert_eq!(worktrees.len(), 1);
+        assert_eq!(worktrees[0], "new_worktree".to_string());
+    }
 }

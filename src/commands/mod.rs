@@ -3,9 +3,9 @@ use tracing::instrument;
 
 use crate::Error;
 
-mod init;
-mod new;
-mod rm;
+pub mod init;
+pub mod new;
+pub mod rm;
 
 pub use init::init;
 pub use new::new;
