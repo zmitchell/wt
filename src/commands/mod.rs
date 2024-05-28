@@ -4,6 +4,7 @@ use tracing::instrument;
 use crate::Error;
 
 pub mod init;
+pub mod list;
 pub mod new;
 pub mod rm;
 
@@ -12,6 +13,7 @@ pub use new::new;
 
 use self::{
     init::Init,
+    list::list,
     new::New,
     rm::{remove, Remove},
 };
@@ -45,6 +47,9 @@ pub enum Commands {
     #[command(about = "Remove one or more worktrees")]
     #[command(alias = "rm")]
     Remove(Remove),
+    #[command(about = "List worktrees")]
+    #[command(alias = "ls")]
+    List,
 }
 
 #[instrument(skip(cmd))]
@@ -66,6 +71,10 @@ pub fn run(cmd: &Commands, opts: &GlobalOptions) -> Result<(), Error> {
         }
         Commands::Remove(args) => {
             remove(args)?;
+            Ok(())
+        }
+        Commands::List => {
+            list()?;
             Ok(())
         }
     }
