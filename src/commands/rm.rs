@@ -1,5 +1,6 @@
 use anyhow::{bail, Context};
 use clap::Args;
+use itertools::Itertools;
 use tracing::instrument;
 
 use crate::{
@@ -19,9 +20,9 @@ pub struct Remove {
     #[arg(help = "Delete the worktree(s) without requiring confirmation")]
     pub force: bool,
 
-    #[arg(short, long)]
-    #[arg(help = "Delete the branch(es) checked out in the worktree(s)")]
-    pub delete_branch: bool,
+    #[arg(short('l'), long)]
+    #[arg(help = "Don't the branch(es) checked out in the worktree(s)")]
+    pub leave_branches: bool,
 }
 
 /// Remove one or more worktrees
@@ -46,6 +47,19 @@ pub fn remove(args: &Remove) -> Result<(), Error> {
     } else {
         args.names.clone()
     };
+    if !args.force {
+        let msg = format!(
+            "Are you sure you want to remove the selected worktrees?\n{}\n",
+            to_delete.iter().join("\n")
+        );
+        let confirm = inquire::Confirm::new(&msg)
+            .with_default(false)
+            .prompt()
+            .context("failed to get confirmation")?;
+        if !confirm {
+            bail!("removal cancelled");
+        }
+    }
     for name in &to_delete {
         let path = sibling_worktree_path(&main_wt, name)
             .with_context(|| format!("couldn't get path for worktree '{name}'"))?;
@@ -54,7 +68,7 @@ pub fn remove(args: &Remove) -> Result<(), Error> {
             .with_context(|| format!("couldn't get branch for worktree '{name}'"))?;
         let mut msg = format!("removed worktree '{name}'");
         remove_worktree(path).with_context(|| format!("couldn't remove worktree '{name}'"))?;
-        if args.delete_branch {
+        if !args.leave_branches {
             let branch_name = branch_from_ref(branch_ref.as_ref())?;
             // NOTE: you need to delete the branch from the main worktree because looking up the
             //       ref of the branch will fail in the newly-deleted worktree

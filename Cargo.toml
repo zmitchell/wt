@@ -12,6 +12,7 @@ clap = { version = "4.5.4", features = ["derive"] }
 clap_derive = "4.5.4"
 gix = "0.63.0"
 inquire = "0.7.5"
+itertools = "0.13.0"
 tempfile = "3.10.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
