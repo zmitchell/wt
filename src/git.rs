@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::{borrow::Cow, path::Path, process::Command};
 
 use anyhow::{anyhow, bail, Context};
-use gix::refs::FullName;
+use gix::refs::{FullName, FullNameRef};
 use gix::Repository;
 use tracing::debug;
 use tracing::instrument;
@@ -22,11 +22,13 @@ pub fn global_default_branch_name() -> Result<String, Error> {
 /// Creates the initial commit in a repository
 ///
 /// This is necessary for brand new projects to create the main branch
-#[instrument]
-pub fn create_initial_commit() -> Result<(), Error> {
-    let output = Command::new("git")
-        .args(["commit", "--allow-empty", "-m", "Initial commit"])
-        .output()?;
+#[instrument(skip_all, fields(path = traceable_path(repo_path.as_ref())))]
+pub fn create_initial_commit(repo_path: impl AsRef<Path>) -> Result<(), Error> {
+    let mut cmd = Command::new("git");
+    cmd.arg("-C");
+    cmd.arg(repo_path.as_ref());
+    cmd.args(["commit", "--allow-empty", "-m", "Initial commit"]);
+    let output = cmd.output()?;
     if !output.status.success() {
         bail!("{}", String::from_utf8_lossy(&output.stderr));
     }
@@ -87,8 +89,6 @@ pub fn remove_worktree(dir: impl AsRef<Path>) -> Result<(), Error> {
     let output = Command::new("git")
         .args(["worktree", "remove"])
         .arg(dir.as_ref())
-        // .stdout(std::process::Stdio::piped())
-        // .stderr(std::process::Stdio::piped())
         .output()
         .context("call to git-worktree failed")?;
     if !output.status.success() {
@@ -142,8 +142,58 @@ pub fn get_worktrees(repo: &Repository) -> Result<Vec<String>, Error> {
         .collect::<Vec<_>>())
 }
 
+/// A locator for a repository that can be cloned
+#[derive(Debug)]
+pub enum RepoLocation {
+    Url(String),
+    Path(PathBuf),
+}
+
+impl std::fmt::Display for RepoLocation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RepoLocation::Url(url) => write!(f, "{}", url),
+            RepoLocation::Path(path) => write!(f, "{}", path.display()),
+        }
+    }
+}
+
+/// Clones the provided repository into the specified directory with the specified name
+pub fn clone_repo(
+    repo: &RepoLocation,
+    clone_under: impl AsRef<Path>,
+    name: Option<impl AsRef<str>>,
+) -> Result<(), Error> {
+    let clone_under = clone_under.as_ref();
+    std::fs::create_dir_all(clone_under).context("couldn't create clone directory")?;
+    let mut cmd = Command::new("git");
+    cmd.current_dir(clone_under);
+    cmd.args(["clone", repo.to_string().as_ref()]);
+    if let Some(name) = name {
+        cmd.arg(name.as_ref());
+    }
+    let output = cmd.output()?;
+    if !output.status.success() {
+        bail!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+    Ok(())
+}
+
+/// Extracts the branch name from a full reference name
+pub fn branch_from_ref(ref_name: &FullNameRef) -> Result<String, Error> {
+    Ok(ref_name
+        .as_bstr()
+        .to_string()
+        .split('/')
+        .nth(2)
+        .context("failed to get branch name from ref")?
+        .to_string())
+}
+
 #[cfg(test)]
 mod test {
+
+    use tempfile::tempdir;
 
     use super::*;
     use crate::commands::init::{init, Init};
@@ -174,5 +224,49 @@ mod test {
         let worktrees = get_worktrees(&repo).unwrap();
         assert_eq!(worktrees.len(), 1);
         assert_eq!(worktrees[0], "new_worktree".to_string());
+    }
+
+    #[test]
+    fn clones_with_original_name() {
+        let temp_dir = tempdir().unwrap();
+        let repo_name = "repo_dir";
+
+        // Create the repo we're going to clone
+        let repo_dir = temp_dir.path().join(repo_name);
+        std::fs::create_dir(&repo_dir).unwrap();
+        gix::init(&repo_dir).unwrap();
+
+        // Clone the repo
+        let clone_dir = temp_dir.path().join("clone_dir");
+        clone_repo(
+            &RepoLocation::Path(repo_dir.clone()),
+            &clone_dir,
+            None::<&str>,
+        )
+        .unwrap();
+
+        assert!(clone_dir.join(repo_name).join(".git").exists());
+    }
+
+    #[test]
+    fn clones_with_new_name() {
+        let temp_dir = tempdir().unwrap();
+        let repo_name = "repo_dir";
+
+        // Create the repo we're going to clone
+        let repo_dir = temp_dir.path().join(repo_name);
+        std::fs::create_dir(&repo_dir).unwrap();
+        gix::init(&repo_dir).unwrap();
+
+        // Clone the repo
+        let clone_dir = temp_dir.path().join("clone_dir");
+        clone_repo(
+            &RepoLocation::Path(repo_dir.clone()),
+            &clone_dir,
+            Some("new_name"),
+        )
+        .unwrap();
+
+        assert!(clone_dir.join("new_name").join(".git").exists());
     }
 }

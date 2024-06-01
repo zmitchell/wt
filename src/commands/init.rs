@@ -37,7 +37,6 @@ pub fn init(args: &Init) -> Result<PathBuf, Error> {
     );
     let _repo = gix::init(&path).context("failed to init git repository")?;
     // TODO: use gix for this
-    std::env::set_current_dir(path.clone())?;
-    create_initial_commit()?;
+    create_initial_commit(&path)?;
     Ok(path)
 }

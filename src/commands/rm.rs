@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     git::{
-        delete_branch, get_main_worktree, get_worktree_branch, get_worktrees,
+        branch_from_ref, delete_branch, get_main_worktree, get_worktree_branch, get_worktrees,
         global_default_branch_name, remove_worktree, sibling_worktree_path,
     },
     Error,
@@ -55,11 +55,7 @@ pub fn remove(args: &Remove) -> Result<(), Error> {
         let mut msg = format!("removed worktree '{name}'");
         remove_worktree(path).with_context(|| format!("couldn't remove worktree '{name}'"))?;
         if args.delete_branch {
-            let branch_name = branch_ref.as_bstr().to_string();
-            let branch_name = branch_name
-                .split('/')
-                .nth(2)
-                .context("failed to get branch name from ref")?;
+            let branch_name = branch_from_ref(branch_ref.as_ref())?;
             // NOTE: you need to delete the branch from the main worktree because looking up the
             //       ref of the branch will fail in the newly-deleted worktree
             delete_branch(&main_wt, &branch_ref)

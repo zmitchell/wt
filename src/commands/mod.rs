@@ -3,6 +3,7 @@ use tracing::instrument;
 
 use crate::Error;
 
+pub mod clone;
 pub mod init;
 pub mod list;
 pub mod new;
@@ -12,6 +13,7 @@ pub use init::init;
 pub use new::new;
 
 use self::{
+    clone::{init_via_clone, Clone},
     init::Init,
     list::list,
     new::New,
@@ -50,6 +52,8 @@ pub enum Commands {
     #[command(about = "List worktrees")]
     #[command(alias = "ls")]
     List,
+    #[command(about = "Create a worktrees project by cloning a repository")]
+    Clone(Clone),
 }
 
 #[instrument(skip(cmd))]
@@ -75,6 +79,10 @@ pub fn run(cmd: &Commands, opts: &GlobalOptions) -> Result<(), Error> {
         }
         Commands::List => {
             list()?;
+            Ok(())
+        }
+        Commands::Clone(args) => {
+            init_via_clone(args)?;
             Ok(())
         }
     }
