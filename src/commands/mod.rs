@@ -46,13 +46,15 @@ pub enum Commands {
     #[command(about = "Create a new worktree")]
     #[command(long_about = include_str!("../long_help/new.md"))]
     New(New),
-    #[command(about = "Remove one or more worktrees")]
+    #[command(about = "Remove the specified worktrees")]
+    #[command(long_about = include_str!("../long_help/rm.md"))]
     #[command(alias = "rm")]
     Remove(Remove),
     #[command(about = "List worktrees")]
     #[command(alias = "ls")]
     List,
-    #[command(about = "Create a worktrees project by cloning a repository")]
+    #[command(about = "Create a worktree project by cloning a repository")]
+    #[command(long_about = include_str!("../long_help/clone.md"))]
     Clone(Clone),
 }
 
@@ -82,8 +84,22 @@ pub fn run(cmd: &Commands, opts: &GlobalOptions) -> Result<(), Error> {
             Ok(())
         }
         Commands::Clone(args) => {
-            init_via_clone(args)?;
+            let path = init_via_clone(args)?;
+            if !opts.quiet {
+                println!("{}", path.display());
+            }
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert()
     }
 }

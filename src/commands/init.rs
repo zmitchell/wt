@@ -12,7 +12,7 @@ use crate::{
 #[derive(Args, Debug, Clone)]
 pub struct Init {
     /// The name of the project and the parent directory of the worktrees
-    #[arg(value_name = "PROJ_NAME")]
+    #[arg(value_name = "PROJECT_NAME")]
     pub name: String,
 
     #[arg(short, long, value_name = "PATH")]

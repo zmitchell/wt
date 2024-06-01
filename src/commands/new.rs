@@ -40,12 +40,15 @@ pub fn new(args: &New) -> Result<PathBuf, Error> {
     let main_worktree =
         get_main_worktree(std::env::current_dir().context("could't get current directory")?)
             .context("couldn't locate main worktree")?;
+    let main_wt_path = main_worktree
+        .work_dir()
+        .context("main worktree had no working directory")?;
     let new_wt_path = new_worktree_path(&main_worktree, &args.name)?;
     let (branch, needs_creating) = new_worktree_branch_name(args);
     if needs_creating {
-        create_branch(&branch)?;
+        create_branch(main_wt_path, &branch)?;
     }
-    new_worktree(&new_wt_path, branch)?;
+    new_worktree(main_wt_path, &new_wt_path, branch)?;
     for src_path in &args.symlinks {
         let suffix = src_path.strip_prefix(
             worktree_path(&main_worktree).context("couldn't get path of main worktree")?,

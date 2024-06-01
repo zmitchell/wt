@@ -5,7 +5,7 @@ use tracing::instrument;
 
 use crate::{
     git::{
-        branch_from_ref, delete_branch, get_main_worktree, get_worktree_branch, get_worktrees,
+        branch_from_ref, delete_branch, get_main_worktree, get_worktree_branch_ref, get_worktrees,
         global_default_branch_name, remove_worktree, sibling_worktree_path,
     },
     Error,
@@ -64,7 +64,7 @@ pub fn remove(args: &Remove) -> Result<(), Error> {
         let path = sibling_worktree_path(&main_wt, name)
             .with_context(|| format!("couldn't get path for worktree '{name}'"))?;
         let repo = gix::open(&path).with_context(|| format!("couldn't open worktree '{name}'"))?;
-        let branch_ref = get_worktree_branch(&repo)
+        let branch_ref = get_worktree_branch_ref(&repo)
             .with_context(|| format!("couldn't get branch for worktree '{name}'"))?;
         let mut msg = format!("removed worktree '{name}'");
         remove_worktree(path).with_context(|| format!("couldn't remove worktree '{name}'"))?;

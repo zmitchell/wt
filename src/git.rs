@@ -6,6 +6,7 @@ use gix::refs::{FullName, FullNameRef};
 use gix::Repository;
 use tracing::debug;
 use tracing::instrument;
+use url::Url;
 
 use crate::{util::traceable_path, Error};
 const DEFAULT_BRANCH: &str = "main";
@@ -39,8 +40,9 @@ pub fn create_initial_commit(repo_path: impl AsRef<Path>) -> Result<(), Error> {
 ///
 /// Assumes you're in the project already.
 #[instrument(skip_all, fields(name = name.as_ref()))]
-pub fn create_branch(name: impl AsRef<str>) -> Result<(), Error> {
+pub fn create_branch(repo_path: impl AsRef<Path>, name: impl AsRef<str>) -> Result<(), Error> {
     let output = Command::new("git")
+        .current_dir(&repo_path)
         .arg("branch")
         .arg(name.as_ref())
         .output()?;
@@ -52,7 +54,7 @@ pub fn create_branch(name: impl AsRef<str>) -> Result<(), Error> {
 
 /// Gets the currently checked out branch of the worktree
 #[instrument]
-pub fn get_worktree_branch(repo: &Repository) -> Result<FullName, Error> {
+pub fn get_worktree_branch_ref(repo: &Repository) -> Result<FullName, Error> {
     repo.head_name()
         .context("couldn't get current branch ref")?
         .ok_or(anyhow!("worktree had no HEAD"))
@@ -73,9 +75,15 @@ pub fn get_main_worktree(starting_path: impl AsRef<Path>) -> Result<Repository, 
 
 /// Creates a new worktree at the specified path, optionally creating a new branch for the worktree
 #[instrument(skip_all, fields(dir = dir.as_ref().to_string_lossy().as_ref(), branch = branch.as_ref()))]
-pub fn new_worktree(dir: impl AsRef<Path>, branch: impl AsRef<str>) -> Result<(), Error> {
+pub fn new_worktree(
+    repo_path: impl AsRef<Path>,
+    dir: impl AsRef<Path>,
+    branch: impl AsRef<str>,
+) -> Result<(), Error> {
     let dir = dir.as_ref();
+    let repo_path = repo_path.as_ref();
     let mut cmd = Command::new("git");
+    cmd.current_dir(repo_path);
     cmd.args(["worktree", "add"]).arg(dir).arg(branch.as_ref());
     let output = cmd.output().context("call to git-worktree failed")?;
     if !output.status.success() {
@@ -145,7 +153,7 @@ pub fn get_worktrees(repo: &Repository) -> Result<Vec<String>, Error> {
 /// A locator for a repository that can be cloned
 #[derive(Debug)]
 pub enum RepoLocation {
-    Url(String),
+    Url(Url),
     Path(PathBuf),
 }
 
@@ -158,13 +166,52 @@ impl std::fmt::Display for RepoLocation {
     }
 }
 
+impl TryFrom<&str> for RepoLocation {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let url = Url::try_from(value);
+        if let Ok(url) = url {
+            Ok(RepoLocation::Url(url))
+        } else {
+            let path = PathBuf::from(value);
+            if !path.exists() {
+                bail!("repo to clone doesn't exist");
+            }
+            Ok(RepoLocation::Path(path))
+        }
+    }
+}
+
+impl RepoLocation {
+    /// Extracts the name of the repository
+    pub fn repo_name(&self) -> Result<String, Error> {
+        match self {
+            RepoLocation::Url(url) => {
+                let name = url
+                    .path_segments()
+                    .and_then(|segments| segments.last())
+                    .context("couldn't get repo name from URL")?;
+                Ok(name.to_string())
+            }
+            RepoLocation::Path(path) => {
+                let name = path
+                    .file_name()
+                    .context("couldn't get repo name from path")?;
+                Ok(name.to_string_lossy().to_string())
+            }
+        }
+    }
+}
+
 /// Clones the provided repository into the specified directory with the specified name
 pub fn clone_repo(
     repo: &RepoLocation,
     clone_under: impl AsRef<Path>,
     name: Option<impl AsRef<str>>,
-) -> Result<(), Error> {
+) -> Result<PathBuf, Error> {
     let clone_under = clone_under.as_ref();
+    let repo_path = clone_under.join(repo.repo_name()?);
     std::fs::create_dir_all(clone_under).context("couldn't create clone directory")?;
     let mut cmd = Command::new("git");
     cmd.current_dir(clone_under);
@@ -176,7 +223,7 @@ pub fn clone_repo(
     if !output.status.success() {
         bail!("{}", String::from_utf8_lossy(&output.stderr));
     }
-    Ok(())
+    Ok(repo_path)
 }
 
 /// Extracts the branch name from a full reference name
@@ -185,9 +232,16 @@ pub fn branch_from_ref(ref_name: &FullNameRef) -> Result<String, Error> {
         .as_bstr()
         .to_string()
         .split('/')
-        .nth(2)
+        .nth(2) // skip the "refs/heads/" prefix
         .context("failed to get branch name from ref")?
         .to_string())
+}
+
+/// Returns the name of the branch currently checked out in the repo
+#[allow(dead_code)]
+pub fn current_branch_name(repo: &Repository) -> Result<String, Error> {
+    let branch_ref = get_worktree_branch_ref(repo).context("couldn't get ref of current branch")?;
+    branch_from_ref(branch_ref.as_ref()).context("couldn't get branch name from ref")
 }
 
 #[cfg(test)]
@@ -199,24 +253,45 @@ mod test {
     use crate::commands::init::{init, Init};
 
     #[test]
+    fn gets_branch_name_from_normal_repo() {
+        let temp_dir = tempdir().unwrap();
+        let repo = gix::init(temp_dir.path()).unwrap();
+
+        // Get the default branch on this system
+        let output = Command::new("git")
+            .arg("-C")
+            .arg(temp_dir.path())
+            .arg("branch")
+            .arg("--show-current")
+            .output()
+            .unwrap();
+        let current_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        let branch_name = current_branch_name(&repo).unwrap();
+        assert_eq!(branch_name, current_branch);
+    }
+
+    #[test]
     fn reads_worktrees() {
         let temp_dir = tempfile::tempdir().unwrap();
         let init_opts = Init {
             name: "test_proj".to_string(),
             path: Some(temp_dir.path().to_path_buf()),
         };
-        init(&init_opts).unwrap();
+        let main_wt_path = init(&init_opts).unwrap();
         let default_branch = global_default_branch_name().unwrap();
         let repo = gix::open(temp_dir.path().join("test_proj").join(&default_branch)).unwrap();
 
         // Create the worktree branch before creating the worktree
-        let current_dir = std::env::current_dir().unwrap();
-        std::env::set_current_dir(temp_dir.path().join("test_proj").join(default_branch)).unwrap();
-        create_branch("new_worktree_branch").unwrap();
-        std::env::set_current_dir(current_dir).unwrap();
+        create_branch(
+            temp_dir.path().join("test_proj").join(default_branch),
+            "new_worktree_branch",
+        )
+        .unwrap();
 
         // Create the new worktree
         new_worktree(
+            main_wt_path,
             temp_dir.path().join("test_proj").join("new_worktree"),
             "new_worktree_branch",
         )
