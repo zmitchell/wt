@@ -20,6 +20,13 @@ existing worktrees (`wt list`).
 
 See the help for each command for more details.
 
+## Expectations
+I essentially wrote this over a weekend to facilitate my particular git workflow without needing to write shell aliases across multiple shells.
+- Is it well tested?
+    - Not particularly
+- Are PRs welcome?
+    - Sure!
+
 ## License
 
 Licensed under either of
