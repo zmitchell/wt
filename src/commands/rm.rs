@@ -42,6 +42,7 @@ pub fn remove(args: &Remove) -> Result<(), Error> {
             bail!("no other worktrees to remove");
         }
         inquire::MultiSelect::new("Select worktrees to remove", worktrees)
+            .with_page_size(15)
             .prompt()
             .context("failed to get selected worktrees")?
     } else {
