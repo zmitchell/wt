@@ -96,6 +96,7 @@ pub fn new_worktree(
 pub fn remove_worktree(dir: impl AsRef<Path>) -> Result<(), Error> {
     let output = Command::new("git")
         .args(["worktree", "remove"])
+        .arg("--force")
         .arg(dir.as_ref())
         .output()
         .context("call to git-worktree failed")?;
