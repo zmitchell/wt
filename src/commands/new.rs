@@ -37,9 +37,8 @@ fn file_exists(p: &str) -> Result<PathBuf, Error> {
 /// Creates a new worktree in the project
 #[instrument]
 pub fn new(args: &New) -> Result<PathBuf, Error> {
-    let main_worktree =
-        get_main_worktree(std::env::current_dir().context("could't get current directory")?)
-            .context("couldn't locate main worktree")?;
+    let current_dir = std::env::current_dir().context("couldn't get current directory")?;
+    let main_worktree = get_main_worktree(&current_dir).context("couldn't locate main worktree")?;
     let main_wt_path = main_worktree
         .work_dir()
         .context("main worktree had no working directory")?;
@@ -50,11 +49,16 @@ pub fn new(args: &New) -> Result<PathBuf, Error> {
     }
     new_worktree(main_wt_path, &new_wt_path, branch)?;
     for src_path in &args.symlinks {
-        let suffix = src_path.strip_prefix(
+        let full_path = if src_path.is_absolute() {
+            src_path.clone()
+        } else {
+            current_dir.join(src_path)
+        };
+        let suffix = full_path.strip_prefix(
             worktree_path(&main_worktree).context("couldn't get path of main worktree")?,
         )?;
         let symlink_path = new_wt_path.join(suffix);
-        std::os::unix::fs::symlink(src_path, symlink_path)?;
+        std::os::unix::fs::symlink(full_path, symlink_path)?;
     }
     Ok(new_wt_path)
 }
