@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::{borrow::Cow, path::Path, process::Command};
 
@@ -6,7 +7,6 @@ use gix::refs::{FullName, FullNameRef};
 use gix::Repository;
 use tracing::debug;
 use tracing::instrument;
-use url::Url;
 
 use crate::{util::traceable_path, Error};
 const DEFAULT_BRANCH: &str = "main";
@@ -151,72 +151,20 @@ pub fn get_worktrees(repo: &Repository) -> Result<Vec<String>, Error> {
         .collect::<Vec<_>>())
 }
 
-/// A locator for a repository that can be cloned
-#[derive(Debug)]
-pub enum RepoLocation {
-    Url(Url),
-    Path(PathBuf),
-}
-
-impl std::fmt::Display for RepoLocation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RepoLocation::Url(url) => write!(f, "{}", url),
-            RepoLocation::Path(path) => write!(f, "{}", path.display()),
-        }
-    }
-}
-
-impl TryFrom<&str> for RepoLocation {
-    type Error = Error;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let url = Url::try_from(value);
-        if let Ok(url) = url {
-            Ok(RepoLocation::Url(url))
-        } else {
-            let path = PathBuf::from(value);
-            if !path.exists() {
-                bail!("repo to clone doesn't exist");
-            }
-            Ok(RepoLocation::Path(path))
-        }
-    }
-}
-
-impl RepoLocation {
-    /// Extracts the name of the repository
-    pub fn repo_name(&self) -> Result<String, Error> {
-        match self {
-            RepoLocation::Url(url) => {
-                let name = url
-                    .path_segments()
-                    .and_then(|segments| segments.last())
-                    .context("couldn't get repo name from URL")?;
-                Ok(name.to_string())
-            }
-            RepoLocation::Path(path) => {
-                let name = path
-                    .file_name()
-                    .context("couldn't get repo name from path")?;
-                Ok(name.to_string_lossy().to_string())
-            }
-        }
-    }
-}
-
 /// Clones the provided repository into the specified directory with the specified name
 pub fn clone_repo(
-    repo: &RepoLocation,
+    repo: impl AsRef<str>,
     clone_under: impl AsRef<Path>,
     name: Option<impl AsRef<str>>,
 ) -> Result<PathBuf, Error> {
     let clone_under = clone_under.as_ref();
-    let repo_path = clone_under.join(repo.repo_name()?);
+    let repo = repo.as_ref();
     std::fs::create_dir_all(clone_under).context("couldn't create clone directory")?;
+    let directories_before_clone = directories_immediately_under_path(clone_under)
+        .context("couldn't get child directories before clone")?;
     let mut cmd = Command::new("git");
     cmd.current_dir(clone_under);
-    cmd.args(["clone", repo.to_string().as_ref()]);
+    cmd.args(["clone", repo]);
     if let Some(name) = name {
         cmd.arg(name.as_ref());
     }
@@ -224,7 +172,39 @@ pub fn clone_repo(
     if !output.status.success() {
         bail!("{}", String::from_utf8_lossy(&output.stderr));
     }
-    Ok(repo_path)
+    let directories_after_clone = directories_immediately_under_path(clone_under)
+        .context("couldn't get child directories after clone")?;
+    let dir_diff = directories_after_clone
+        .difference(&directories_before_clone)
+        .cloned()
+        .collect::<Vec<_>>();
+    if dir_diff.len() > 1 {
+        bail!("clone created more than one directory: {:?}", dir_diff);
+    }
+    if dir_diff.is_empty() {
+        bail!("clone didn't create a directory");
+    }
+    Ok(dir_diff[0].clone())
+}
+
+/// Returns a set of directories immediately under the provided path
+fn directories_immediately_under_path(p: impl AsRef<Path>) -> Result<HashSet<PathBuf>, Error> {
+    let path = p.as_ref();
+    let dirs = path
+        .read_dir()
+        .with_context(|| format!("couldn't read directory: {}", path.display()))?
+        .filter_map(|d| match d {
+            Ok(d) => {
+                if d.file_type().is_ok_and(|ft| ft.is_dir()) {
+                    Some(d.path())
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        })
+        .collect::<HashSet<_>>();
+    Ok(dirs)
 }
 
 /// Extracts the branch name from a full reference name
@@ -314,12 +294,7 @@ mod test {
 
         // Clone the repo
         let clone_dir = temp_dir.path().join("clone_dir");
-        clone_repo(
-            &RepoLocation::Path(repo_dir.clone()),
-            &clone_dir,
-            None::<&str>,
-        )
-        .unwrap();
+        clone_repo(repo_dir.clone().to_string_lossy(), &clone_dir, None::<&str>).unwrap();
 
         assert!(clone_dir.join(repo_name).join(".git").exists());
     }
@@ -337,7 +312,7 @@ mod test {
         // Clone the repo
         let clone_dir = temp_dir.path().join("clone_dir");
         clone_repo(
-            &RepoLocation::Path(repo_dir.clone()),
+            repo_dir.clone().to_string_lossy(),
             &clone_dir,
             Some("new_name"),
         )
