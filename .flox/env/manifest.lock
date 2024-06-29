@@ -1,0 +1,302 @@
+{
+  "lockfile-version": 1,
+  "manifest": {
+    "version": 1,
+    "install": {
+      "cargo": {
+        "pkg-path": "cargo",
+        "pkg-group": null,
+        "priority": null,
+        "version": null,
+        "systems": null
+      },
+      "clang": {
+        "pkg-path": "clang",
+        "pkg-group": null,
+        "priority": null,
+        "version": null,
+        "systems": [
+          "aarch64-darwin",
+          "x86_64-darwin"
+        ]
+      },
+      "gcc": {
+        "pkg-path": "gcc",
+        "pkg-group": null,
+        "priority": null,
+        "version": null,
+        "systems": [
+          "aarch64-linux",
+          "x86_64-linux"
+        ]
+      }
+    },
+    "vars": {},
+    "hook": {
+      "on-activate": null
+    },
+    "profile": {
+      "common": null,
+      "bash": null,
+      "zsh": null,
+      "fish": null,
+      "tcsh": null
+    },
+    "options": {
+      "systems": [
+        "aarch64-darwin",
+        "aarch64-linux",
+        "x86_64-darwin",
+        "x86_64-linux"
+      ],
+      "allow": {
+        "unfree": null,
+        "broken": null,
+        "licenses": []
+      },
+      "semver": {
+        "allow-pre-releases": null
+      }
+    }
+  },
+  "packages": [
+    {
+      "attr_path": "cargo",
+      "broken": false,
+      "derivation": "/nix/store/z3ijazyiqxav59nyymg670a9qmdgz777-cargo-1.78.0.drv",
+      "description": "Downloads your Rust project's dependencies and builds your project",
+      "install_id": "cargo",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "cargo-1.78.0",
+      "pname": "cargo",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.78.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/bf2yrdc59bc1r6bjjp7sv7psg97fm7vz-cargo-1.78.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "cargo",
+      "broken": false,
+      "derivation": "/nix/store/0p9rn86dlll532zs0avc8w7f9j6q1d3d-cargo-1.78.0.drv",
+      "description": "Downloads your Rust project's dependencies and builds your project",
+      "install_id": "cargo",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "cargo-1.78.0",
+      "pname": "cargo",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.78.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/7bni82i90zm7gjwbq03csx5dbwc15zgd-cargo-1.78.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "cargo",
+      "broken": false,
+      "derivation": "/nix/store/avbz0ash99zx20p9fnmb0dmwp3qjj7z3-cargo-1.78.0.drv",
+      "description": "Downloads your Rust project's dependencies and builds your project",
+      "install_id": "cargo",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "cargo-1.78.0",
+      "pname": "cargo",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.78.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/1z813izigsvb2x2nqpnw1y4lmw9ash67-cargo-1.78.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "cargo",
+      "broken": false,
+      "derivation": "/nix/store/2n3r8mskhiz21cx0nbq7mcva1ia711ih-cargo-1.78.0.drv",
+      "description": "Downloads your Rust project's dependencies and builds your project",
+      "install_id": "cargo",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "cargo-1.78.0",
+      "pname": "cargo",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.78.0",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/qyw7qc22j2ngf9wip8sxagaxb0387gnq-cargo-1.78.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "clang",
+      "broken": false,
+      "derivation": "/nix/store/yhhdqviz4bj090ky3dvzkp7gcjrxixa1-clang-wrapper-16.0.6.drv",
+      "description": "C language family frontend for LLVM (wrapper script)",
+      "install_id": "clang",
+      "license": "NCSA",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "clang-wrapper-16.0.6",
+      "pname": "clang",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-16.0.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/9g8qxz6r8x7g01hkzy739m5j6bawk4d5-clang-wrapper-16.0.6"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "clang",
+      "broken": false,
+      "derivation": "/nix/store/4pcn21n5nmvkf2l0mail05zbqibbf1iz-clang-wrapper-16.0.6.drv",
+      "description": "C language family frontend for LLVM (wrapper script)",
+      "install_id": "clang",
+      "license": "NCSA",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "clang-wrapper-16.0.6",
+      "pname": "clang",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-16.0.6",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/iyk4jyp5aqmrp6mq5mlvirjdijhrdbna-clang-wrapper-16.0.6"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gcc",
+      "broken": false,
+      "derivation": "/nix/store/kcxc26yl7zmfb7q0frda7022bwm89v5i-gcc-wrapper-13.3.0.drv",
+      "description": "GNU Compiler Collection, version 13.3.0 (wrapper script)",
+      "install_id": "gcc",
+      "license": "GPL-3.0-or-later",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "gcc-wrapper-13.3.0",
+      "pname": "gcc",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-13.3.0",
+      "outputs_to_install": [
+        "out",
+        "man"
+      ],
+      "outputs": {
+        "info": "/nix/store/xx4230pczzn6k4blf3fxq6hr97hiznri-gcc-wrapper-13.3.0-info",
+        "man": "/nix/store/s0nbivy3rramhl3qncw5yfqcxqf3g059-gcc-wrapper-13.3.0-man",
+        "out": "/nix/store/a11996pij79myrp43myn4zycdlzh9jsw-gcc-wrapper-13.3.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "gcc",
+      "broken": false,
+      "derivation": "/nix/store/ckdz7aik5zqay7mbff4szzhvys1f140z-gcc-wrapper-13.3.0.drv",
+      "description": "GNU Compiler Collection, version 13.3.0 (wrapper script)",
+      "install_id": "gcc",
+      "license": "GPL-3.0-or-later",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "gcc-wrapper-13.3.0",
+      "pname": "gcc",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-13.3.0",
+      "outputs_to_install": [
+        "out",
+        "man"
+      ],
+      "outputs": {
+        "info": "/nix/store/pcff7bkp617z9aamyc4ryiz3pjrr4ly3-gcc-wrapper-13.3.0-info",
+        "man": "/nix/store/365ads05c225gjzx4crk5zyx4img37g1-gcc-wrapper-13.3.0-man",
+        "out": "/nix/store/mpm3i0sbqc9svfch6a17179fs64dz2kv-gcc-wrapper-13.3.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    }
+  ]
+}
