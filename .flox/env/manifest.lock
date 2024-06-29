@@ -29,6 +29,23 @@
           "aarch64-linux",
           "x86_64-linux"
         ]
+      },
+      "libiconv": {
+        "pkg-path": "libiconv",
+        "pkg-group": null,
+        "priority": null,
+        "version": null,
+        "systems": [
+          "aarch64-darwin",
+          "x86_64-darwin"
+        ]
+      },
+      "rustc": {
+        "pkg-path": "rustc",
+        "pkg-group": null,
+        "priority": null,
+        "version": null,
+        "systems": null
       }
     },
     "vars": {},
@@ -293,6 +310,194 @@
         "info": "/nix/store/pcff7bkp617z9aamyc4ryiz3pjrr4ly3-gcc-wrapper-13.3.0-info",
         "man": "/nix/store/365ads05c225gjzx4crk5zyx4img37g1-gcc-wrapper-13.3.0-man",
         "out": "/nix/store/mpm3i0sbqc9svfch6a17179fs64dz2kv-gcc-wrapper-13.3.0"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libiconv",
+      "broken": false,
+      "derivation": "/nix/store/00mnclrjzkdqqaxi0n9bzp47mzn5pbda-libiconv-99.drv",
+      "description": "Iconv(3) implementation",
+      "install_id": "libiconv",
+      "license": "[ BSD-2-Clause, BSD-3-Clause, APSL-1.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "libiconv-99",
+      "pname": "libiconv",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "99",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/w062fsd14dghzai3a64spxpqbc4ga208-libiconv-99-dev",
+        "out": "/nix/store/0rsh55ighfv3fxidf3xz8vl3abiika0i-libiconv-99"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "libiconv",
+      "broken": false,
+      "derivation": "/nix/store/m79fmxzgf62mz4j7s3b9ncibihf5imbs-libiconv-99.drv",
+      "description": "Iconv(3) implementation",
+      "install_id": "libiconv",
+      "license": "[ BSD-2-Clause, BSD-3-Clause, APSL-1.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "libiconv-99",
+      "pname": "libiconv",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "99",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "dev": "/nix/store/6j1dsavq0vy6bizfh5ak8079xqgsj0gg-libiconv-99-dev",
+        "out": "/nix/store/53ygysdzqfasmwb2v12zffpyhxf31vl9-libiconv-99"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustc",
+      "broken": false,
+      "derivation": "/nix/store/m94qpnalkbs02lgiq9dg1ggqvyw1nbbd-rustc-wrapper-1.78.0.drv",
+      "description": "Safe, concurrent, practical language (wrapper script)",
+      "install_id": "rustc",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "rustc-wrapper-1.78.0",
+      "pname": "rustc",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-1.78.0",
+      "outputs_to_install": [
+        "out",
+        "man"
+      ],
+      "outputs": {
+        "doc": "/nix/store/3vdfa4b4v0mm7lyx82vipjb7y9d4nk01-rustc-wrapper-1.78.0-doc",
+        "man": "/nix/store/rg03ilamgnsmnlz3zvx77h4vpypq9d3d-rustc-wrapper-1.78.0-man",
+        "out": "/nix/store/w4sfqji5f6vfj76rxck071y07lrkmjab-rustc-wrapper-1.78.0"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustc",
+      "broken": false,
+      "derivation": "/nix/store/amnazhlmd8sb5v4lvyy35fiwnifxa0gi-rustc-wrapper-1.78.0.drv",
+      "description": "Safe, concurrent, practical language (wrapper script)",
+      "install_id": "rustc",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "rustc-wrapper-1.78.0",
+      "pname": "rustc",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-1.78.0",
+      "outputs_to_install": [
+        "out",
+        "man"
+      ],
+      "outputs": {
+        "doc": "/nix/store/6lf069wx7cxpma5k66rmhrhzdwpkkdy7-rustc-wrapper-1.78.0-doc",
+        "man": "/nix/store/z0ain8jm95qmdf7g7mmaq1crv38grk7v-rustc-wrapper-1.78.0-man",
+        "out": "/nix/store/l1zlwibr9j4avxy5fgljf8sifi2swxl0-rustc-wrapper-1.78.0"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustc",
+      "broken": false,
+      "derivation": "/nix/store/g1kp2pmmjrm0a5qcwiwkz4w7bgf63zqz-rustc-wrapper-1.78.0.drv",
+      "description": "Safe, concurrent, practical language (wrapper script)",
+      "install_id": "rustc",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "rustc-wrapper-1.78.0",
+      "pname": "rustc",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-1.78.0",
+      "outputs_to_install": [
+        "out",
+        "man"
+      ],
+      "outputs": {
+        "doc": "/nix/store/pz7sczlw1j9c46gj3y74sfmc2s5dc8cg-rustc-wrapper-1.78.0-doc",
+        "man": "/nix/store/nncb7wl97sgk28sqwkvx9as276ibf6ws-rustc-wrapper-1.78.0-man",
+        "out": "/nix/store/vqq8svxf24g9dkr9bvkmx7277f7rl332-rustc-wrapper-1.78.0"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "rustc",
+      "broken": false,
+      "derivation": "/nix/store/rf6w7ghlnldkm54sgsicqwjhrpwhm73x-rustc-wrapper-1.78.0.drv",
+      "description": "Safe, concurrent, practical language (wrapper script)",
+      "install_id": "rustc",
+      "license": "[ MIT, Apache-2.0 ]",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "name": "rustc-wrapper-1.78.0",
+      "pname": "rustc",
+      "rev": "a71e967ef3694799d0c418c98332f7ff4cc5f6af",
+      "rev_count": 642660,
+      "rev_date": "2024-06-22T16:54:41Z",
+      "scrape_date": "2024-06-24T09:18:58Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "wrapper-1.78.0",
+      "outputs_to_install": [
+        "out",
+        "man"
+      ],
+      "outputs": {
+        "doc": "/nix/store/0i3qyca844rl9hp1vl10y6xpka54724j-rustc-wrapper-1.78.0-doc",
+        "man": "/nix/store/n0lpq9g1ip5zdy2zjh63j14cm6m4rw8r-rustc-wrapper-1.78.0-man",
+        "out": "/nix/store/9fhkbcr18yygrwn25x56szvqn1apfxjc-rustc-wrapper-1.78.0"
       },
       "system": "x86_64-linux",
       "group": "toplevel",

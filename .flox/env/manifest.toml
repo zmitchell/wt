@@ -9,10 +9,13 @@ version = 1
 # the `[install]` section.
 [install]
 cargo.pkg-path = "cargo"
+rustc.pkg-path = "rustc"
 gcc.pkg-path = "gcc"
 gcc.systems = ["aarch64-linux", "x86_64-linux"]
 clang.pkg-path = "clang"
 clang.systems = ["aarch64-darwin", "x86_64-darwin"]
+libiconv.pkg-path = "libiconv"
+libiconv.systems = ["aarch64-darwin", "x86_64-darwin"]
 # hello.pkg-path = "hello"
 # nodejs = { version = "^18.4.2", pkg-path = "nodejs_18" }
 
